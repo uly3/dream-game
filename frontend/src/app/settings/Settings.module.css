@@ -1,0 +1,44 @@
+.container {
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--dreamBlack);
+    color: var(--dreamWhite);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .title {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+  }
+  
+  .sliderGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    width: 300px;
+  }
+  
+  .sliderLabel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .backButton {
+    background-color: var(--dreamGray);
+    color: var(--dreamWhite);
+    border: none;
+    padding: 0.75rem 2rem;
+    border-radius: 0.3rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .backButton:hover {
+    background-color: var(--dreamGreen);
+  }
+  

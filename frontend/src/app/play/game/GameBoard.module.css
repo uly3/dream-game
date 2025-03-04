@@ -1,0 +1,14 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    color: var(--dreamWhite);
+  }
+  
+  .gameArea {
+    margin-top: 1rem;
+    border: 2px solid var(--dreamGreen);
+    /* This container holds the Pixi canvas. */
+  }
+  

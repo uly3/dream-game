@@ -1,0 +1,49 @@
+/* src/app/menu/MainMenu.module.css */
+
+/* Container that fills the viewport */
+.container {
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--dreamBlack);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* Big title text */
+  .title {
+    font-size: 3rem;
+    margin-bottom: 2rem;
+    letter-spacing: 0.15rem;
+  }
+  
+  /* Button container spacing */
+  .buttonGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  /* Button base styles */
+  .menuButton {
+    background-color: var(--dreamGray);
+    color: var(--dreamWhite);
+    font-size: 1.25rem;
+    padding: 0.75rem 2rem;
+    border: none;
+    border-radius: 0.3rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  /* Hover states for a creepy effect */
+  .menuButton:hover {
+    background-color: var(--dreamGreen);
+  }
+  
+  /* A special “quit” button style */
+  .quitButton:hover {
+    background-color: var(--dreamRed);
+  }
+  
