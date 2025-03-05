@@ -1,93 +1,144 @@
 // src/store/gameStore.ts
-import { create } from 'zustand';
+import { create } from "zustand";
+
+/** Returns a random 0–9 for new point cards. */
+function getRandomCard() {
+  return Math.floor(Math.random() * 10);
+}
+
+/** Picks 'count' random dream entities out of [A,B,C,D,E], no duplicates. */
+function pickRandomDreamEntities(count: number): string[] {
+  const allEntities = ["A", "B", "C", "D", "E"];
+  const chosen: string[] = [];
+  for (let i = 0; i < count; i++) {
+    if (allEntities.length === 0) break;
+    const idx = Math.floor(Math.random() * allEntities.length);
+    chosen.push(allEntities[idx]);
+    // remove it so no duplicates
+    allEntities.splice(idx, 1);
+  }
+  return chosen;
+}
 
 export interface Player {
-  id: string;               // "player" or "cpu"
-  roll: number;             // dice roll 1-6
-  insanity: number;         // starts at 100
-  wisdom: number;           // starts at 0
-  dreamEntities: string[];  // e.g. ["A", "B"]
-  numberCards: number[];    // 3 cards
-  isEliminated: boolean;    
+  id: string;
+  roll: number; // dice roll 1–6
+  insanity: number; // starts at 100
+  wisdom: number; // starts at 0
+  dreamEntities: string[]; // e.g. ["A","B"]
+  numberCards: number[]; // always 3 in hand
+  isEliminated: boolean;
+  usedGuillotineCount?: number;
 }
 
 interface GameState {
   players: Player[];
   currentPlayerIndex: number;
-  isPlayerAwake: boolean;      
-  deck: number[];
-  wisdomPile: number;
-  flipInProgress: boolean;     // 3-second delay
-  hasFlippedCoin: boolean;     // can only flip once per turn
-  hasTakenAction: boolean;     // can only do 1 action if awake
-  flipCountdown: number; // for the 3-2-1 countdown
+  isPlayerAwake: boolean;
+  flipInProgress: boolean;
+  hasFlippedCoin: boolean;
+  hasTakenAction: boolean;
+  flipCountdown: number;
 
-  // Actions
+  // SCOUT
+  scoutEntities: string[] | null;
+  scoutCountdown: number;
+
+  // GAMBLER
+  gamblerRolling: number;
+  gamblerResult: number | null;
+  gamblerShowResult: number;
+
+  // GAME OVER
+  gameOver: boolean;
+  gameOverCountdown: number;
+  gameOverMessage: string;
+  fadeToBlack: boolean; // if CPU wins => fade to black, else => fade to white
+
+  // ACTIONS
   initGame: () => void;
   flipCoin: () => void;
   nextTurn: () => void;
   gainWisdom: () => void;
-  initiateDuel: (targetId: string) => void;
+  initiateDuel: (playerCard: number) => void;
   useEntityAbility: (entity: string) => void;
+  useWisdom: () => void;
+  setGameOver: (winner: "player" | "cpu") => void;
+  checkElimination: (i1: number, i2: number) => void;
 }
 
-const initialDeck = [0,1,2,3,4,5,6,7,8,9];
-
 export const useGameStore = create<GameState>((set, get) => ({
+  // INITIAL STATE
   players: [
     {
-      id: 'player',
-      roll: 0, // will set later
-      insanity: 100,
-      wisdom: 0,
-      dreamEntities: ['A','B'],
-      numberCards: [0,2,7],
-      isEliminated: false,
-    },
-    {
-      id: 'cpu',
+      id: "player",
       roll: 0,
       insanity: 100,
       wisdom: 0,
-      dreamEntities: ['C','D'],
-      numberCards: [1,5,9],
+      dreamEntities: ["A", "B"],
+      numberCards: [0, 2, 7],
       isEliminated: false,
+      usedGuillotineCount: 0,
+    },
+    {
+      id: "cpu",
+      roll: 0,
+      insanity: 100,
+      wisdom: 0,
+      dreamEntities: ["C", "D"],
+      numberCards: [1, 5, 9],
+      isEliminated: false,
+      usedGuillotineCount: 0,
     },
   ],
   currentPlayerIndex: 0,
   isPlayerAwake: false,
-  deck: [...initialDeck],
-  wisdomPile: 10,
   flipInProgress: false,
   hasFlippedCoin: false,
   hasTakenAction: false,
   flipCountdown: 0,
 
-  // 1) Initialize game: random roll (1-6) for each player, sort turn order
+  scoutEntities: null,
+  scoutCountdown: 0,
+  gamblerRolling: 0,
+  gamblerResult: null,
+  gamblerShowResult: 0,
+
+  // GAME OVER
+  gameOver: false,
+  gameOverCountdown: 0,
+  gameOverMessage: "",
+  fadeToBlack: false,
+
+  // 1) initGame
   initGame: () => {
-    function rollUntilNoTie(players: Player[]): Player[] {
+    const { players } = get();
+
+    // reroll dice until no tie
+    function rollUntilNoTie(ps: Player[]): Player[] {
       while (true) {
-        // Assign random rolls
-        const updated = players.map((p) => ({
+        const updated = ps.map((p) => ({
           ...p,
           roll: Math.floor(Math.random() * 6) + 1,
         }));
-        // Check for duplicates
         const rolls = updated.map((p) => p.roll);
-        const uniqueRolls = new Set(rolls);
-        if (uniqueRolls.size === updated.length) {
-          return updated;
-        }
-        // Otherwise, loop again
+        const unique = new Set(rolls);
+        if (unique.size === updated.length) return updated;
       }
     }
 
-    const current = get().players;
-    // Reroll until no ties
-    const noTiePlayers = rollUntilNoTie(current);
-
-    // Sort by roll DESC
+    const noTiePlayers = rollUntilNoTie(players);
     noTiePlayers.sort((a, b) => b.roll - a.roll);
+
+    // assign random data
+    noTiePlayers.forEach((p) => {
+      p.numberCards = [getRandomCard(), getRandomCard(), getRandomCard()];
+      p.dreamEntities = pickRandomDreamEntities(2);
+      p.insanity = 100;
+      p.wisdom = 0;
+      p.isEliminated = false;
+      p.usedGuillotineCount = 0;
+    });
 
     set({
       players: noTiePlayers,
@@ -97,39 +148,48 @@ export const useGameStore = create<GameState>((set, get) => ({
       hasFlippedCoin: false,
       hasTakenAction: false,
       flipCountdown: 0,
+      scoutEntities: null,
+      scoutCountdown: 0,
+      gamblerRolling: 0,
+      gamblerResult: null,
+      gamblerShowResult: 0,
+      gameOver: false,
+      gameOverCountdown: 0,
+      gameOverMessage: "",
+      fadeToBlack: false,
     });
   },
 
-  // Coin flip with countdown
+  // 2) flipCoin
   flipCoin: () => {
-    const { flipInProgress, hasFlippedCoin } = get();
+    const { flipInProgress, hasFlippedCoin, gameOver } = get();
+    if (gameOver) return; // ignore if game is over
     if (flipInProgress || hasFlippedCoin) return;
-
-    // Start flipping
     set({ flipInProgress: true, flipCountdown: 3 });
 
     const interval = setInterval(() => {
       const { flipCountdown } = get();
       if (flipCountdown <= 1) {
         clearInterval(interval);
-        // finalize coin result
-        const result = Math.random() < 0.5; // awake or asleep
+        const awake = Math.random() < 0.5;
         set({
-          isPlayerAwake: result,
+          isPlayerAwake: awake,
           flipInProgress: false,
           hasFlippedCoin: true,
           flipCountdown: 0,
         });
       } else {
-        // decrement countdown
         set({ flipCountdown: flipCountdown - 1 });
       }
     }, 1000);
   },
 
+  // 3) nextTurn
   nextTurn: () => {
-    const { currentPlayerIndex, players } = get();
-    const nextIndex = (currentPlayerIndex + 1) % players.length;
+    const { currentPlayerIndex, gameOver } = get();
+    if (gameOver) return;
+
+    const nextIndex = (currentPlayerIndex + 1) % get().players.length;
     set({
       currentPlayerIndex: nextIndex,
       isPlayerAwake: false,
@@ -137,29 +197,264 @@ export const useGameStore = create<GameState>((set, get) => ({
       hasFlippedCoin: false,
       hasTakenAction: false,
       flipCountdown: 0,
+      scoutEntities: null,
+      scoutCountdown: 0,
+      gamblerRolling: 0,
+      gamblerResult: null,
+      gamblerShowResult: 0,
     });
   },
 
-  // 4) Gain wisdom
+  // 4) gainWisdom
   gainWisdom: () => {
-    const { players, currentPlayerIndex, isPlayerAwake, wisdomPile, hasTakenAction } = get();
-    if (!isPlayerAwake || wisdomPile <= 0 || hasTakenAction) return;
+    const { players, currentPlayerIndex, isPlayerAwake, hasTakenAction, gameOver } = get();
+    if (gameOver) return;
+    if (!isPlayerAwake || hasTakenAction) return;
 
-    const updatedPlayers = [...players];
-    updatedPlayers[currentPlayerIndex].wisdom += 1;
+    const updated = [...players];
+    updated[currentPlayerIndex].wisdom += 1;
+    set({ players: updated, hasTakenAction: true });
+  },
+
+  // 5) initiateDuel
+  initiateDuel: (playerCard: number) => {
+    const { currentPlayerIndex, players, hasTakenAction, isPlayerAwake, gameOver } = get();
+    if (gameOver) return;
+    if (!isPlayerAwake || hasTakenAction) return;
+
+    const updated = [...players];
+    const player = updated[currentPlayerIndex];
+    const oppIndex = (currentPlayerIndex + 1) % updated.length;
+    const opponent = updated[oppIndex];
+
+    // CPU picks random card
+    const cpuIndex = Math.floor(Math.random() * opponent.numberCards.length);
+    const cpuCard = opponent.numberCards[cpuIndex];
+
+    if (playerCard > cpuCard) {
+      opponent.insanity = Math.max(opponent.insanity - 10, 0);
+    } else if (cpuCard > playerCard) {
+      player.insanity = Math.max(player.insanity - 10, 0);
+    }
+
+    // remove used cards
+    player.numberCards = player.numberCards.filter((c) => c !== playerCard);
+    opponent.numberCards.splice(cpuIndex, 1);
+
+    // top up to 3
+    while (player.numberCards.length < 3) {
+      player.numberCards.push(getRandomCard());
+    }
+    while (opponent.numberCards.length < 3) {
+      opponent.numberCards.push(getRandomCard());
+    }
+
+    set({ players: updated, hasTakenAction: true });
+    get().checkElimination(currentPlayerIndex, oppIndex);
+  },
+
+  // 6) useEntityAbility
+  useEntityAbility: (entity: string) => {
+    const { currentPlayerIndex, players, isPlayerAwake, hasTakenAction, gameOver } = get();
+    if (gameOver) return;
+    if (!isPlayerAwake || hasTakenAction) return;
+
+    const updated = [...players];
+    const player = updated[currentPlayerIndex];
+    const oppIndex = (currentPlayerIndex + 1) % updated.length;
+    const opponent = updated[oppIndex];
+
+    switch (entity) {
+      case "A": { // Wisdom Eater
+        if (opponent.wisdom > 0) {
+          opponent.wisdom -= 1;
+          player.wisdom += 1;
+        }
+        set({ players: updated, hasTakenAction: true });
+        get().checkElimination(currentPlayerIndex, oppIndex);
+        return;
+      }
+      case "B": { // Scout
+        // Store the opponent's raw dream entities
+        const oppEntities = [...opponent.dreamEntities];
+        set({ scoutEntities: oppEntities, scoutCountdown: 5 });
+
+        const interval = setInterval(() => {
+          const { scoutCountdown } = get();
+          if (scoutCountdown <= 1) {
+            clearInterval(interval);
+            set({ scoutEntities: null, scoutCountdown: 0 });
+          } else {
+            set({ scoutCountdown: scoutCountdown - 1 });
+          }
+        }, 1000);
+
+        // remove B
+        player.dreamEntities = player.dreamEntities.filter((e) => e !== "B");
+        set({ players: updated, hasTakenAction: true });
+        get().checkElimination(currentPlayerIndex, oppIndex);
+        return;
+      }
+      case "C": { // Gambler
+        if (!player.isEliminated && !opponent.isEliminated) {
+          set({ gamblerRolling: 3, gamblerResult: null, gamblerShowResult: 0 });
+          const rollInterval = setInterval(() => {
+            const { gamblerRolling } = get();
+            if (gamblerRolling <= 1) {
+              clearInterval(rollInterval);
+              const dice = Math.floor(Math.random() * 6) + 1;
+              if (dice % 2 === 0) {
+                player.wisdom += 2;
+              } else {
+                player.insanity = Math.max(player.insanity - 20, 0);
+              }
+              set({ gamblerResult: dice, gamblerRolling: 0, gamblerShowResult: 3 });
+
+              const showInterval = setInterval(() => {
+                const { gamblerShowResult } = get();
+                if (gamblerShowResult <= 1) {
+                  clearInterval(showInterval);
+                  set({
+                    players: updated,
+                    gamblerResult: null,
+                    gamblerShowResult: 0,
+                    hasTakenAction: true,
+                  });
+                  get().checkElimination(currentPlayerIndex, oppIndex);
+                } else {
+                  set({ gamblerShowResult: gamblerShowResult - 1 });
+                }
+              }, 1000);
+            } else {
+              set({ gamblerRolling: gamblerRolling - 1 });
+            }
+          }, 1000);
+        }
+        return;
+      }
+      case "D": { // Gift
+        player.numberCards.push(getRandomCard());
+        while (player.numberCards.length > 3) {
+          const discardIndex = Math.floor(Math.random() * player.numberCards.length);
+          player.numberCards.splice(discardIndex, 1);
+        }
+        set({ players: updated, hasTakenAction: true });
+        get().checkElimination(currentPlayerIndex, oppIndex);
+        return;
+      }
+      case "E": { // Guillotine
+        if (!player.usedGuillotineCount) player.usedGuillotineCount = 0;
+        if (player.usedGuillotineCount >= 2) {
+          set({ players: updated, hasTakenAction: true });
+          return;
+        }
+        player.usedGuillotineCount++;
+        const coin = Math.random() < 0.5;
+        if (coin) {
+          player.insanity = Math.max(player.insanity - 50, 0);
+        } else {
+          opponent.insanity = Math.max(opponent.insanity - 50, 0);
+        }
+        if (player.usedGuillotineCount >= 2) {
+          player.dreamEntities = player.dreamEntities.filter((e) => e !== "E");
+        }
+        set({ players: updated, hasTakenAction: true });
+        get().checkElimination(currentPlayerIndex, oppIndex);
+        return;
+      }
+      default:
+        return;
+    }
+  },
+
+  // 7) useWisdom
+  useWisdom: () => {
+    const { currentPlayerIndex, players, isPlayerAwake, hasTakenAction, gameOver } = get();
+    if (gameOver) return;
+    if (!isPlayerAwake || hasTakenAction) return;
+
+    const updated = [...players];
+    const player = updated[currentPlayerIndex];
+    const oppIndex = (currentPlayerIndex + 1) % updated.length;
+    const opponent = updated[oppIndex];
+
+    if (player.wisdom < 5) return;
+
+    player.wisdom -= 5;
+    if (opponent.dreamEntities.length > 0) {
+      const randIndex = Math.floor(Math.random() * opponent.dreamEntities.length);
+      opponent.dreamEntities.splice(randIndex, 1);
+    }
+    set({ players: updated, hasTakenAction: true });
+    get().checkElimination(currentPlayerIndex, oppIndex);
+  },
+
+  // setGameOver
+  setGameOver: (winner: "player" | "cpu") => {
+    const { gameOver } = get();
+    if (gameOver) return;
+
+    let message =
+      winner === "player"
+        ? "You awake from your sleep paralysis!"
+        : "You succumbed to sleep paralysis...";
+
+    // If CPU wins => fade to black, else fade to white
+    const fadeToBlack = winner === "cpu";
 
     set({
-      players: updatedPlayers,
-      wisdomPile: wisdomPile - 1,
-      hasTakenAction: true, // used our 1 action
+      gameOver: true,
+      gameOverCountdown: 5,
+      gameOverMessage: message,
+      fadeToBlack,
     });
+
+    const interval = setInterval(() => {
+      const { gameOverCountdown } = get();
+      if (gameOverCountdown <= 1) {
+        clearInterval(interval);
+        set({ gameOverCountdown: 0 });
+        // Optionally do more here or let the page handle redirect
+      } else {
+        set({ gameOverCountdown: gameOverCountdown - 1 });
+      }
+    }, 1000);
   },
 
-  initiateDuel: (targetId: string) => {
-    // will fill in
-  },
+  // checkElimination: inline method
+  checkElimination: (i1: number, i2: number) => {
+    const store = get();
+    const updatedPlayers = [...store.players];
+    const p1 = updatedPlayers[i1];
+    const p2 = updatedPlayers[i2];
 
-  useEntityAbility: (entity: string) => {
-    // will fill in
+    // If dreamEntities=0 => set insanity=0 => eliminated
+    if (p1.dreamEntities.length === 0) {
+      p1.insanity = 0;
+      p1.isEliminated = true;
+    }
+    if (p2.dreamEntities.length === 0) {
+      p2.insanity = 0;
+      p2.isEliminated = true;
+    }
+    // If insanity <=0 => eliminated
+    if (p1.insanity <= 0) {
+      p1.insanity = 0;
+      p1.isEliminated = true;
+    }
+    if (p2.insanity <= 0) {
+      p2.insanity = 0;
+      p2.isEliminated = true;
+    }
+
+    // if exactly one side is eliminated => game over
+    if (p1.isEliminated && !p2.isEliminated) {
+      store.setGameOver("cpu");
+    } else if (p2.isEliminated && !p1.isEliminated) {
+      store.setGameOver("player");
+    }
+
+    // store the updated array
+    set({ players: updatedPlayers });
   },
 }));
