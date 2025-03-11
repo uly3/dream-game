@@ -6,7 +6,7 @@ import { Player } from "@/store/gameStore";
 interface NumberCardsProps {
   player: Player;
   onSelect: (card: number) => void;
-  shadowCount?: number; // how many cards to obscure
+  shadowCount?: number; // number of cards to obscure for hallucination
 }
 
 export default function NumberCards({
@@ -31,36 +31,15 @@ export default function NumberCards({
               cursor: "pointer",
             }}
           >
-            <div
-              style={{
-                position: "absolute",
-                top: "2px",
-                left: "2px",
-                fontSize: "10px",
-              }}
-            >
+            <div style={{ position: "absolute", top: "2px", left: "2px", fontSize: "10px" }}>
               {isObscured ? "???" : card}
             </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                height: "100%",
-              }}
-            >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
               <span style={{ fontSize: "20px" }}>
                 {isObscured ? "???" : card}
               </span>
             </div>
-            <div
-              style={{
-                position: "absolute",
-                bottom: "2px",
-                right: "2px",
-                fontSize: "10px",
-              }}
-            >
+            <div style={{ position: "absolute", bottom: "2px", right: "2px", fontSize: "10px" }}>
               {isObscured ? "???" : card}
             </div>
           </button>

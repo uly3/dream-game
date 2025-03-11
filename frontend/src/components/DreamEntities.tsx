@@ -31,18 +31,12 @@ export default function DreamEntities({ player, onUse }: DreamEntitiesProps) {
             <div style={{ fontSize: "10px", textAlign: "center" }}>
               {displayName}
             </div>
-            <div
-              style={{
-                fontSize: "12px",
-                margin: "0.2rem 0",
-                textAlign: "center",
-              }}
-            >
-              <span role="img" aria-label="entity">
-                👻
-              </span>
+            <div style={{ fontSize: "12px", margin: "0.2rem 0", textAlign: "center" }}>
+              <span role="img" aria-label="entity">👻</span>
             </div>
-            <div style={{ fontSize: "8px", textAlign: "center" }}>{desc}</div>
+            <div style={{ fontSize: "8px", textAlign: "center" }}>
+              {desc}
+            </div>
           </button>
         );
       })}
@@ -52,34 +46,22 @@ export default function DreamEntities({ player, onUse }: DreamEntitiesProps) {
 
 function getEntityName(e: string): string {
   switch (e) {
-    case "A":
-      return "Wisdom Eater";
-    case "B":
-      return "Scout";
-    case "C":
-      return "Gambler";
-    case "D":
-      return "Gift";
-    case "E":
-      return "Guillotine";
-    default:
-      return e;
+    case "A": return "Wisdom Eater";
+    case "B": return "Scout";
+    case "C": return "Gambler";
+    case "D": return "Gift";
+    case "E": return "Guillotine";
+    default: return e;
   }
 }
 
 function getEntityDescription(e: string): string {
   switch (e) {
-    case "A":
-      return "Steal 1 wisdom";
-    case "B":
-      return "See opponent's entities once";
-    case "C":
-      return "Roll dice: even=+2 wisdom, odd=-20 insanity";
-    case "D":
-      return "Draw new point card, discard random one";
-    case "E":
-      return "Flip coin: heads=lose 50, tails=opponent loses 50";
-    default:
-      return "";
+    case "A": return "Steal 1 wisdom";
+    case "B": return "See opponent's entities once";
+    case "C": return "Roll dice: even=+2 wisdom, odd=-20 insanity";
+    case "D": return "Draw new point card, discard random one";
+    case "E": return "Flip coin: heads=lose 50, tails=opponent loses 50";
+    default: return "";
   }
 }
