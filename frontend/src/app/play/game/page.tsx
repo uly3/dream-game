@@ -6,7 +6,8 @@ import { useGameStore } from "@/store/gameStore";
 import DreamEntities from "@/components/DreamEntities";
 import NumberCards from "@/components/NumberCards";
 import SoundButton from "@/components/SoundButton";
-
+import { useBackgroundMusic } from "@/lib/soundManager";
+import CreepyMessages from "@/components/CreepyMessages";
 
 // Helper: Map Scout letters to full names.
 function scoutEntityNames(entities: string[]): string[] {
@@ -54,13 +55,17 @@ export default function GameBoardPage() {
     gameOverCountdown,
     gameOverMessage,
     fadeToBlack,
+    musicVolume,
   } = useGameStore();
+
+  // Play game loop music (the MusicProvider in layout should handle main menu music).
+  useBackgroundMusic("/Main_Game_Loop_Song.wav", true, musicVolume / 100);
 
   useEffect(() => {
     initGame();
   }, [initGame]);
 
-  // Redirect to menu when gameOver countdown finishes
+  // Redirect to menu when gameOver countdown finishes.
   useEffect(() => {
     if (gameOver && gameOverCountdown === 0) {
       router.push("/menu");
@@ -71,9 +76,13 @@ export default function GameBoardPage() {
   const cpuPlayer = players.find((p) => p.id === "cpu");
   const playerObj = players.find((p) => p.id === "player");
 
-  // Minimal CPU logic
+  // Minimal CPU logic.
   useEffect(() => {
-    if (currentPlayer.id === "cpu" && !currentPlayer.isEliminated && !gameOver) {
+    if (
+      currentPlayer.id === "cpu" &&
+      !currentPlayer.isEliminated &&
+      !gameOver
+    ) {
       const cpuTimeout = setTimeout(() => {
         if (
           useGameStore.getState().players[
@@ -102,11 +111,13 @@ export default function GameBoardPage() {
     }
   }, [currentPlayerIndex, currentPlayer, gameOver, flipCoin, gainWisdom, nextTurn]);
 
-  // Game Over fade screen logic
+  // Game Over fade screen logic.
   if (gameOver) {
-    const fadeFactor = 1 - gameOverCountdown / 5; // 0 → 1 over 5 seconds
+    const fadeFactor = 1 - gameOverCountdown / 5; // 0 → 1 over 5s
     const startColor = { r: 208, g: 198, b: 198 }; // #d0c6c6
-    const endColor = fadeToBlack ? { r: 0, g: 0, b: 0 } : { r: 255, g: 255, b: 255 };
+    const endColor = fadeToBlack
+      ? { r: 0, g: 0, b: 0 }
+      : { r: 255, g: 255, b: 255 };
     const r = Math.round(startColor.r + (endColor.r - startColor.r) * fadeFactor);
     const g = Math.round(startColor.g + (endColor.g - startColor.g) * fadeFactor);
     const b = Math.round(startColor.b + (endColor.b - startColor.b) * fadeFactor);
@@ -212,6 +223,8 @@ export default function GameBoardPage() {
         backgroundColor: "#d0c6c6",
       }}
     >
+      {/* Render creepy whispers overlay */}
+      <CreepyMessages />
       {/* Top banner */}
       <div
         style={{
@@ -260,8 +273,8 @@ export default function GameBoardPage() {
         {/* If Scout is used: show opponent's dream entities (full names) for 5s */}
         {scoutEntities && scoutCountdown > 0 && (
           <p style={{ color: "yellow", margin: "1rem 0" }}>
-            Opponent’s Entities: {scoutEntityNames(scoutEntities).join(", ")} (
-            {scoutCountdown}s)
+            Opponent’s Entities:{" "}
+            {scoutEntityNames(scoutEntities).join(", ")} ({scoutCountdown}s)
           </p>
         )}
 
