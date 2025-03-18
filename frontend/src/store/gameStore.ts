@@ -22,7 +22,7 @@ function pickRandomDreamEntities(count: number): string[] {
 export interface Player {
   id: string;
   roll: number;             // dice roll 1–6
-  insanity: number;         // starts at 100
+  insanity: number;         // internal value (displayed as "Sanity" on UI)
   wisdom: number;           // starts at 0
   dreamEntities: string[];  // e.g. ["A","B"]
   numberCards: number[];    // always 3 in hand
@@ -111,7 +111,6 @@ export const useGameStore = create<GameState>((set, get) => ({
   gameOverCountdown: 0,
   gameOverMessage: "",
   fadeToBlack: false,
-  // Default volumes (50% each)
   musicVolume: 50,
   soundVolume: 50,
 
@@ -326,10 +325,15 @@ export const useGameStore = create<GameState>((set, get) => ({
         }
         player.usedGuillotineCount++;
         const coin = Math.random() < 0.5;
-        if (coin) {
-          player.insanity = Math.max(player.insanity - 50, 0);
-        } else {
+        // If CPU is using Guillotine, always target opponent (i.e. do not reduce own sanity)
+        if (player.id === "cpu") {
           opponent.insanity = Math.max(opponent.insanity - 50, 0);
+        } else {
+          if (coin) {
+            player.insanity = Math.max(player.insanity - 50, 0);
+          } else {
+            opponent.insanity = Math.max(opponent.insanity - 50, 0);
+          }
         }
         if (player.usedGuillotineCount >= 2) {
           player.dreamEntities = player.dreamEntities.filter((e) => e !== "E");
