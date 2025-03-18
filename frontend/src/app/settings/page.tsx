@@ -1,16 +1,19 @@
+// src/app/settings/page.tsx
 "use client";
-import { useState } from "react";
+import { useGameStore } from "@/store/gameStore";
 import Link from "next/link";
 import styles from "./Settings.module.css";
+import SoundButton from "@/components/SoundButton";
 
 export default function SettingsPage() {
-  const [musicVolume, setMusicVolume] = useState(50);
-  const [soundVolume, setSoundVolume] = useState(50);
+  const musicVolume = useGameStore((state) => state.musicVolume);
+  const soundVolume = useGameStore((state) => state.soundVolume);
+  const setMusicVolume = useGameStore((state) => state.setMusicVolume);
+  const setSoundVolume = useGameStore((state) => state.setSoundVolume);
 
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Settings</h1>
-
       <div className={styles.sliderGroup}>
         <label className={styles.sliderLabel}>
           Music Volume: {musicVolume}
@@ -22,7 +25,6 @@ export default function SettingsPage() {
             onChange={(e) => setMusicVolume(Number(e.target.value))}
           />
         </label>
-
         <label className={styles.sliderLabel}>
           Sound Volume: {soundVolume}
           <input
@@ -34,11 +36,14 @@ export default function SettingsPage() {
           />
         </label>
       </div>
-
       <Link href="/menu">
-        <button className={styles.backButton}>
+        <SoundButton
+          className={styles.backButton}
+          hoverSoundSrc="/Piano_Hover_Effect.wav"
+          clickSoundSrc="/Piano_Select_Effect.wav"
+        >
           Back
-        </button>
+        </SoundButton>
       </Link>
     </div>
   );

@@ -14,11 +14,13 @@ export default function PlayMenuPage() {
         </Link>
 
         {/* 1v1 Multiplayer */}
+        <p>Coming Soon!</p>
         <Link href="/play/game?mode=1v1">
           <button className={styles.button}>1 vs 1</button>
         </Link>
 
         {/* 1v1v1v1 Free-for-All */}
+        <p>Coming Soon!</p>
         <Link href="/play/game?mode=ffa">
           <button className={styles.button}>1 vs 1 vs 1 vs 1</button>
         </Link>

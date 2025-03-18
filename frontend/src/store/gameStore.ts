@@ -54,6 +54,10 @@ interface GameState {
   gameOverMessage: string;
   fadeToBlack: boolean; // if CPU wins => fade to black; if player wins => fade to white
 
+  // SOUND SETTINGS
+  musicVolume: number; // 0–100
+  soundVolume: number; // 0–100
+
   // ACTIONS
   initGame: () => void;
   flipCoin: () => void;
@@ -64,6 +68,8 @@ interface GameState {
   useWisdom: () => void;
   setGameOver: (winner: "player" | "cpu") => void;
   checkElimination: (i1: number, i2: number) => void;
+  setMusicVolume: (vol: number) => void;
+  setSoundVolume: (vol: number) => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -105,12 +111,14 @@ export const useGameStore = create<GameState>((set, get) => ({
   gameOverCountdown: 0,
   gameOverMessage: "",
   fadeToBlack: false,
+  // Default volumes (50% each)
+  musicVolume: 50,
+  soundVolume: 50,
 
   // ACTIONS
 
   initGame: () => {
     const { players } = get();
-    // Reroll dice until there are no ties.
     function rollUntilNoTie(ps: Player[]): Player[] {
       while (true) {
         const updated = ps.map((p) => ({
@@ -209,7 +217,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const player = updated[currentPlayerIndex];
     const oppIndex = (currentPlayerIndex + 1) % updated.length;
     const opponent = updated[oppIndex];
-    // Opponent (CPU) picks a random card.
+    // Opponent picks a random card.
     const cpuIndex = Math.floor(Math.random() * opponent.numberCards.length);
     const cpuCard = opponent.numberCards[cpuIndex];
     if (playerCard > cpuCard) {
@@ -219,7 +227,6 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
     player.numberCards = player.numberCards.filter((c) => c !== playerCard);
     opponent.numberCards.splice(cpuIndex, 1);
-    // Refill to 3 cards each.
     while (player.numberCards.length < 3) {
       player.numberCards.push(getRandomCard());
     }
@@ -238,10 +245,8 @@ export const useGameStore = create<GameState>((set, get) => ({
     const player = updated[currentPlayerIndex];
     const oppIndex = (currentPlayerIndex + 1) % updated.length;
     const opponent = updated[oppIndex];
-
     switch (entity) {
       case "A": { // Wisdom Eater
-        // Even if opponent has 0 wisdom, action is consumed.
         if (opponent.wisdom > 0) {
           opponent.wisdom -= 1;
           player.wisdom += 1;
@@ -386,7 +391,6 @@ export const useGameStore = create<GameState>((set, get) => ({
     const updatedPlayers = [...store.players];
     const p1 = updatedPlayers[i1];
     const p2 = updatedPlayers[i2];
-
     if (p1.dreamEntities.length === 0) {
       p1.insanity = 0;
       p1.isEliminated = true;
@@ -403,13 +407,19 @@ export const useGameStore = create<GameState>((set, get) => ({
       p2.insanity = 0;
       p2.isEliminated = true;
     }
-
     if (p1.isEliminated && !p2.isEliminated) {
       store.setGameOver("cpu");
     } else if (p2.isEliminated && !p1.isEliminated) {
       store.setGameOver("player");
     }
-
     set({ players: updatedPlayers });
+  },
+
+  setMusicVolume: (vol: number) => {
+    set({ musicVolume: vol });
+  },
+
+  setSoundVolume: (vol: number) => {
+    set({ soundVolume: vol });
   },
 }));

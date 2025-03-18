@@ -1,38 +1,51 @@
-"use client"; 
-import styles from "./MainMenu.module.css";
-import { motion } from "framer-motion";
+// src/app/menu/page.tsx
+"use client";
+import { useEffect } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
+import SoundButton from "@/components/SoundButton";
+import { useBackgroundMusic } from "@/lib/soundManager";
+import { useGameStore } from "@/store/gameStore";
+import styles from "./MainMenu.module.css";
 
 export default function MainMenuPage() {
+  // Play Main Menu loop music using the store's musicVolume (converted 0–1)
+  //const musicVolume = useGameStore((state) => state.musicVolume) / 100;
+
   const handleQuit = () => {
-    // In a browser tab, window.close() typically won't do much unless opened via script
-    // You could redirect somewhere else or show a modal.
     window.close();
   };
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>DREAM GAME</h1>
-
+      <h1 className={styles.title}>GAME NULL</h1>
       <div className={styles.buttonGroup}>
         <Link href="/play">
-          <button className={styles.menuButton}>
+          <SoundButton
+            className={styles.menuButton}
+            hoverSoundSrc="/Piano_Hover_Effect.wav"
+            clickSoundSrc="/Piano_Select_Effect.wav"
+          >
             Play Game
-          </button>
+          </SoundButton>
         </Link>
-
         <Link href="/settings">
-          <button className={styles.menuButton}>
+          <SoundButton
+            className={styles.menuButton}
+            hoverSoundSrc="/Piano_Hover_Effect.wav"
+            clickSoundSrc="/Piano_Select_Effect.wav"
+          >
             Settings
-          </button>
+          </SoundButton>
         </Link>
-
-        <button
+        <SoundButton
           className={`${styles.menuButton} ${styles.quitButton}`}
           onClick={handleQuit}
+          hoverSoundSrc="/Piano_Hover_Effect.wav"
+          clickSoundSrc="/Piano_Select_Effect.wav"
         >
           Quit
-        </button>
+        </SoundButton>
       </div>
     </div>
   );
