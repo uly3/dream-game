@@ -1,3 +1,6 @@
+/* src/app/play/game/GameBoard.module.css */
+
+/* Main container for the game */
 .gameContainer {
   position: relative;
   width: 100vw;
@@ -6,7 +9,7 @@
   background-color: #d0c6c6; /* pinkish dream color */
   overflow: hidden;
   padding: 1rem;
-  font-family: "Georgia", serif; /* or any “gothic” font you prefer */
+  font-family: "Georgia", serif;
 }
 
 /* Top banner: Turn info */
@@ -34,7 +37,7 @@
   left: 50px;
 }
 
-/* Middle area for flipping coin, gambler message, etc. */
+/* Middle area for messages and controls (Flip Coin, etc.) */
 .middleArea {
   position: absolute;
   top: 50%;
@@ -64,65 +67,56 @@
   cursor: not-allowed;
 }
 
-/* 
-   GOTHIC “CARD” STYLING for Player/CPU info 
-   (like an old playing card / tarot card style)
-*/
+/* Gothic card styling for player/CPU info */
 .infoCard {
   width: 200px;
   min-height: 280px;
-
-  /* Slightly tinted paper color. You can also do a background-image here if you prefer. */
   background-color: #f3e9dd; /* fallback color */
-
-  border: 3px solid #4b3a29; /* dark brown frame */
+  border: 3px solid #4b3a29;
   border-radius: 8px;
   padding: 0.8rem;
   margin: 0.5rem;
   text-align: center;
   box-shadow: 0 0 12px rgba(0,0,0,0.6);
-
   position: relative;
   font-family: "Georgia", serif;
 }
 
-/* Player-specific card: uses player.jpg as background */
+/* Player card uses /player.jpg */
 .playerCard {
   background-image: url("/player.jpg");
-  background-size: contain; 
+  background-size: contain;
   background-position: bottom;
   background-repeat: no-repeat;
 }
 
-/* CPU-specific card: uses silhouette or some shadowy placeholder. 
-   Put a silhouette image in /public/cpu-shadow.png (for example). */
+/* CPU card uses /cpu.jpg or /cpu-shadow.png */
 .cpuCard {
   background-image: url("/cpu.jpg");
-  background-size: contain; 
+  background-size: contain;
   background-position: center 110%;
   background-repeat: no-repeat;
 }
 
-/* Dark overlay if the background images are too bright */
+/* Dark overlay for spookiness */
 .infoCard::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.3); /* dark overlay for spookiness */
+  background: rgba(0,0,0,0.3);
   pointer-events: none;
   border-radius: 8px;
 }
 
+/* Info card text */
 .infoCard h3 {
   margin: 0.5rem 0;
   font-size: 1.1rem;
   color: #fff;
   text-shadow: 1px 1px 2px black;
-  position: relative; /* so it’s above the overlay */
+  position: relative;
   z-index: 1;
 }
-
-/* Subtext lines for insanity/wisdom/entities */
 .infoCard p {
   margin: 0.2rem 0;
   color: #eee;
@@ -130,4 +124,118 @@
   text-shadow: 1px 1px 2px black;
   position: relative;
   z-index: 1;
+}
+
+/* ----------------------------------------- */
+/* Gothic Card Styles for Number & Dream Cards */
+/* ----------------------------------------- */
+
+.cardBase {
+  /* The standard 60×90 size */
+  width: 60px;
+  height: 90px;
+
+  border: 2px solid #4b3a29;
+  border-radius: 6px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.5);
+
+  position: relative;
+  font-family: "Georgia", serif;
+  cursor: pointer;
+  overflow: hidden;
+
+  /* 
+    We'll rely on specialized sub-classes for 
+    layout differences (pointCard vs dreamCard).
+  */
+}
+
+/* For the text in the center of the card (by default) */
+.cardBaseText {
+  margin: 0;
+  pointer-events: none;
+  text-shadow: 1px 1px 2px black;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* Number (point) card style */
+.pointCard {
+  background-color: #e0e0e0;
+  color: #222;
+
+  /* 
+    We'll center the big number absolutely. 
+    We'll also handle corners. 
+    So let's use flex for the container, 
+    but align center 
+  */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Dream entity card style */
+.dreamCard {
+  background-color: #7d1414;
+  color: #fff;
+
+  /* 
+    We want icon at top, name in middle, desc at bottom. 
+    We'll use a column layout with space-between. 
+  */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* The default height is 90px, so we can 
+     space things accordingly. 
+  */
+}
+
+/* For the bigger, top icon in dream cards */
+.entityIconLarge {
+  width: 24px;
+  height: 24px;
+  object-fit: cover;
+  margin-top: 4px;
+  margin-bottom: auto; /* push name + desc down if you want the icon strictly top */
+}
+
+/* We'll place the name in the center and desc at the bottom. */
+.dreamEntityName {
+  margin-top: auto; /* after icon, we expand to push desc down */
+  text-align: center;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 0 4px;
+}
+
+.dreamEntityDesc {
+  margin-top: auto; /* push desc to the bottom */
+  margin-bottom: 4px;
+  font-size: 8px;
+  text-align: center;
+  padding: 0 4px;
+  overflow: hidden;        /* prevent overflow */
+  text-overflow: ellipsis; /* optional if text is too long */
+  white-space: normal;
+}
+
+/* Additional corner text for number cards */
+.cardCornerTopLeft {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  font-size: 10px;
+  color: #222;
+  z-index: 2;
+}
+
+.cardCornerBottomRight {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  font-size: 10px;
+  color: #222;
+  z-index: 2;
 }

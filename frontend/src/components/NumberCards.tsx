@@ -1,7 +1,7 @@
-// src/components/NumberCards.tsx
 "use client";
 import React from "react";
 import { Player } from "@/store/gameStore";
+import styles from "@/app/play/game/GameBoard.module.css";
 
 interface NumberCardsProps {
   player: Player;
@@ -18,29 +18,27 @@ export default function NumberCards({
     <div style={{ display: "flex", gap: "0.5rem" }}>
       {player.numberCards.map((card, idx) => {
         const isObscured = idx < shadowCount;
+        const displayValue = isObscured ? "???" : String(card);
+
         return (
           <button
             key={idx}
+            className={`${styles.cardBase} ${styles.pointCard}`}
             onClick={() => onSelect(card)}
-            style={{
-              backgroundColor: "#e0e0e0",
-              border: "1px solid #ccc",
-              width: "60px",
-              height: "90px",
-              position: "relative",
-              cursor: "pointer",
-            }}
           >
-            <div style={{ position: "absolute", top: "2px", left: "2px", fontSize: "10px" }}>
-              {isObscured ? "???" : card}
+            {/* Top-left corner */}
+            <div className={styles.cardCornerTopLeft}>
+              {displayValue}
             </div>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-              <span style={{ fontSize: "20px" }}>
-                {isObscured ? "???" : card}
-              </span>
-            </div>
-            <div style={{ position: "absolute", bottom: "2px", right: "2px", fontSize: "10px" }}>
-              {isObscured ? "???" : card}
+
+            {/* Big centered text */}
+            <p className={styles.cardBaseText}>
+              {displayValue}
+            </p>
+
+            {/* Bottom-right corner */}
+            <div className={styles.cardCornerBottomRight}>
+              {displayValue}
             </div>
           </button>
         );
