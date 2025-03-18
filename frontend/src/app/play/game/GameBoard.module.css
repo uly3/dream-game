@@ -3,11 +3,13 @@
   width: 100vw;
   height: 100vh;
   color: var(--dreamWhite);
-  background-color: #d0c6c6; /* your pinkish dream color */
-  overflow: hidden; /* in case you have floating elements */
+  background-color: #d0c6c6; /* pinkish dream color */
+  overflow: hidden;
   padding: 1rem;
+  font-family: "Georgia", serif; /* or any “gothic” font you prefer */
 }
 
+/* Top banner: Turn info */
 .topBanner {
   position: absolute;
   top: 10px;
@@ -15,20 +17,24 @@
   transform: translateX(-50%);
   font-size: 1.2rem;
   font-weight: bold;
+  text-shadow: 1px 1px 2px black;
 }
 
-.playerInfo {
-  position: absolute;
-  bottom: 50px;
-  left: 50px;
-}
-
+/* CPU info => top-right */
 .cpuInfo {
   position: absolute;
   top: 50px;
   right: 50px;
 }
 
+/* Player info => bottom-left */
+.playerInfo {
+  position: absolute;
+  bottom: 50px;
+  left: 50px;
+}
+
+/* Middle area for flipping coin, gambler message, etc. */
 .middleArea {
   position: absolute;
   top: 50%;
@@ -37,7 +43,7 @@
   text-align: center;
 }
 
-/* Example of styling for your action buttons */
+/* Action button styling (Flip Coin, End Turn, etc.) */
 .actionButton {
   background-color: var(--dreamGray);
   color: var(--dreamWhite);
@@ -47,12 +53,81 @@
   margin: 0.3rem;
   cursor: pointer;
   font-size: 1rem;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.1s;
 }
 .actionButton:hover {
   background-color: var(--dreamGreen);
+  transform: scale(1.02);
 }
 .actionButton:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* 
+   GOTHIC “CARD” STYLING for Player/CPU info 
+   (like an old playing card / tarot card style)
+*/
+.infoCard {
+  width: 200px;
+  min-height: 280px;
+
+  /* Slightly tinted paper color. You can also do a background-image here if you prefer. */
+  background-color: #f3e9dd; /* fallback color */
+
+  border: 3px solid #4b3a29; /* dark brown frame */
+  border-radius: 8px;
+  padding: 0.8rem;
+  margin: 0.5rem;
+  text-align: center;
+  box-shadow: 0 0 12px rgba(0,0,0,0.6);
+
+  position: relative;
+  font-family: "Georgia", serif;
+}
+
+/* Player-specific card: uses player.jpg as background */
+.playerCard {
+  background-image: url("/player.jpg");
+  background-size: contain; 
+  background-position: bottom;
+  background-repeat: no-repeat;
+}
+
+/* CPU-specific card: uses silhouette or some shadowy placeholder. 
+   Put a silhouette image in /public/cpu-shadow.png (for example). */
+.cpuCard {
+  background-image: url("/cpu.jpg");
+  background-size: contain; 
+  background-position: center 110%;
+  background-repeat: no-repeat;
+}
+
+/* Dark overlay if the background images are too bright */
+.infoCard::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.3); /* dark overlay for spookiness */
+  pointer-events: none;
+  border-radius: 8px;
+}
+
+.infoCard h3 {
+  margin: 0.5rem 0;
+  font-size: 1.1rem;
+  color: #fff;
+  text-shadow: 1px 1px 2px black;
+  position: relative; /* so it’s above the overlay */
+  z-index: 1;
+}
+
+/* Subtext lines for insanity/wisdom/entities */
+.infoCard p {
+  margin: 0.2rem 0;
+  color: #eee;
+  font-size: 0.9rem;
+  text-shadow: 1px 1px 2px black;
+  position: relative;
+  z-index: 1;
 }

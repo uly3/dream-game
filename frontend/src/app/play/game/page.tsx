@@ -1,3 +1,4 @@
+// src/app/play/game/page.tsx
 "use client";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -7,28 +8,25 @@ import NumberCards from "@/components/NumberCards";
 import SoundButton from "@/components/SoundButton";
 import { useBackgroundMusic } from "@/lib/soundManager";
 import CreepyMessages from "@/components/CreepyMessages";
-
 import styles from "./GameBoard.module.css";
 
 function getDisplayName(id: string) {
-  // "player" => "You"
-  // "cpu" => "You?"
   return id === "player" ? "You" : "You?";
 }
 
 // Helper: Map Scout letters to full names (if needed)
 function scoutEntityNames(entities: string[]): string[] {
-  return entities.map((e) => {
-    switch (e) {
-      case "A": return "Wisdom Eater";
-      case "B": return "Scout";
-      case "C": return "Gambler";
-      case "D": return "Gift";
-      case "E": return "Guillotine";
-      default:  return e;
-    }
-  });
-}
+    return entities.map((e) => {
+      switch (e) {
+        case "A": return "Wisdom Eater";
+        case "B": return "Scout";
+        case "C": return "Gambler";
+        case "D": return "Gift";
+        case "E": return "Guillotine";
+        default:  return e;
+      }
+    });
+  }
 
 export default function GameBoardPage() {
   const router = useRouter();
@@ -59,31 +57,29 @@ export default function GameBoardPage() {
     musicVolume,
   } = useGameStore();
 
-  // Play the game loop music
+  // 1) Play game music
   useBackgroundMusic("/Main_Game_Loop_Song.wav", true, musicVolume / 100);
 
-  // Initialize game on mount
+  // 2) initGame on mount
   useEffect(() => {
     initGame();
   }, [initGame]);
 
-  // If game over countdown hits 0 => go back to menu
+  // 3) if gameOver countdown hits 0 => go to /menu
   useEffect(() => {
     if (gameOver && gameOverCountdown === 0) {
       router.push("/menu");
     }
   }, [gameOver, gameOverCountdown, router]);
 
-  // Identify the current player
+  // 4) CPU logic
   const currentPlayer = players[currentPlayerIndex];
   const cpuPlayer = players.find((p) => p.id === "cpu");
   const playerObj = players.find((p) => p.id === "player");
 
-  // Minimal CPU logic
   useEffect(() => {
     if (currentPlayer.id === "cpu" && !currentPlayer.isEliminated && !gameOver) {
       const cpuTimeout = setTimeout(() => {
-        // Double-check still CPU
         if (useGameStore.getState().players[useGameStore.getState().currentPlayerIndex].id !== "cpu") return;
         flipCoin();
         const coinTimeout = setTimeout(() => {
@@ -101,10 +97,10 @@ export default function GameBoardPage() {
     }
   }, [currentPlayerIndex, currentPlayer, gameOver, flipCoin, gainWisdom, nextTurn]);
 
-  // If game is over => fade background
+  // 5) If gameOver => fade out screen
   if (gameOver) {
-    const fadeFactor = 1 - gameOverCountdown / 5; // from 0 to 1 over 5s
-    const startColor = { r: 208, g: 198, b: 198 }; // #d0c6c6
+    const fadeFactor = 1 - gameOverCountdown / 5;
+    const startColor = { r: 208, g: 198, b: 198 };
     const endColor = fadeToBlack ? { r: 0, g: 0, b: 0 } : { r: 255, g: 255, b: 255 };
     const r = Math.round(startColor.r + (endColor.r - startColor.r) * fadeFactor);
     const g = Math.round(startColor.g + (endColor.g - startColor.g) * fadeFactor);
@@ -125,7 +121,6 @@ export default function GameBoardPage() {
           transition: "background-color 1s linear",
         }}
       >
-        {/* Render creepy messages even on game over */}
         <CreepyMessages />
         <h2>{gameOverMessage}</h2>
         <p>Returning to reality in {gameOverCountdown}s...</p>
@@ -133,15 +128,13 @@ export default function GameBoardPage() {
     );
   }
 
-  // Show gambler dice result if needed
+  // gambler message
   function renderGamblerMessage() {
     if (gamblerRolling > 0) {
       return <p style={{ color: "lime" }}>Rolling dice... ({gamblerRolling}s)</p>;
     }
     if (gamblerResult !== null && gamblerShowResult > 0) {
-      const evenOdd = gamblerResult % 2 === 0
-        ? "even => +2 wisdom"
-        : "odd => -20 insanity";
+      const evenOdd = gamblerResult % 2 === 0 ? "even => +2 wisdom" : "odd => -20 insanity";
       return (
         <p style={{ color: "lime" }}>
           You rolled {gamblerResult} ({evenOdd}) ({gamblerShowResult}s)
@@ -151,7 +144,7 @@ export default function GameBoardPage() {
     return null;
   }
 
-  // For the hallucination shadow effect
+  // hallucination shadows
   function getShadowedCount(insanity: number): number {
     if (insanity < 40) return 3;
     if (insanity < 50) return 2;
@@ -181,14 +174,12 @@ export default function GameBoardPage() {
     );
   }
 
-  // If we can use wisdom
-  const canUseWisdom =
-    currentPlayer.wisdom >= 5 && !hasTakenAction && isPlayerAwake && hasFlippedCoin;
+  const canUseWisdom = currentPlayer.wisdom >= 5 && !hasTakenAction && isPlayerAwake && hasFlippedCoin;
 
-  // If Scout used, convert letters to full names
   function renderScoutMessage() {
     if (scoutEntities && scoutCountdown > 0) {
       const names = scoutEntityNames(scoutEntities).join(", ");
+      
       return (
         <p style={{ color: "yellow", margin: "1rem 0" }}>
           Opponent’s Entities: {names} ({scoutCountdown}s)
@@ -200,47 +191,50 @@ export default function GameBoardPage() {
 
   return (
     <div className={styles.gameContainer}>
-      {/* The creepy whispers overlay */}
       <CreepyMessages />
 
-      {/* Top banner: Turn info */}
+      {/* Turn info */}
       <div className={styles.topBanner}>
         Turn: {getDisplayName(currentPlayer.id).toUpperCase()}
       </div>
 
-      {/* CPU info => "You?" => top-right */}
+      {/* CPU card */}
       <div className={styles.cpuInfo}>
-        <h3>{getDisplayName("cpu")} (Roll: {cpuPlayer?.roll})</h3>
-        <p>Insanity: {cpuPlayer?.insanity}</p>
-        <p>Wisdom: {cpuPlayer?.wisdom}</p>
-        <p>Dream Entities: {cpuPlayer ? cpuPlayer.dreamEntities.length : 0}</p>
+        <div className={`${styles.infoCard} ${styles.cpuCard}`}>
+          <h3>
+            {getDisplayName("cpu")} (Roll: {cpuPlayer?.roll})
+          </h3>
+          <p>Insanity: {cpuPlayer?.insanity}</p>
+          <p>Wisdom: {cpuPlayer?.wisdom}</p>
+          <p>Dream Entities: {cpuPlayer ? cpuPlayer.dreamEntities.length : 0}</p>
+        </div>
       </div>
 
-      {/* Player info => "You" => bottom-left */}
+      {/* Player card */}
       <div className={styles.playerInfo}>
-        <h3>{getDisplayName("player")} (Roll: {playerObj?.roll})</h3>
-        <p>Insanity: {playerObj?.insanity}</p>
-        <p>Wisdom: {playerObj?.wisdom}</p>
-        <p>Dream Entities: {playerObj ? playerObj.dreamEntities.length : 0}</p>
+        <div className={`${styles.infoCard} ${styles.playerCard}`}>
+          <h3>
+            {getDisplayName("player")} (Roll: {playerObj?.roll})
+          </h3>
+          <p>Insanity: {playerObj?.insanity}</p>
+          <p>Wisdom: {playerObj?.wisdom}</p>
+          <p>Dream Entities: {playerObj ? playerObj.dreamEntities.length : 0}</p>
+        </div>
       </div>
 
-      {/* Middle area for flipping coin, gambler, etc. */}
+      {/* Middle area */}
       <div className={styles.middleArea}>
         {flipInProgress && <p>Flipping coin... ({flipCountdown}s)</p>}
         {hasFlippedCoin && (
           <p>{isPlayerAwake ? "You are AWAKE" : "You are ASLEEP"}</p>
         )}
 
-        {/* Scout message if used */}
         {renderScoutMessage()}
-
-        {/* Gambler dice message if used */}
         {renderGamblerMessage()}
 
-        {/* Player’s turn controls */}
+        {/* Player controls */}
         {currentPlayer.id === "player" && !flipInProgress && !currentPlayer.isEliminated && (
           <div style={{ marginTop: "1rem" }}>
-            {/* If we haven't flipped coin yet */}
             {!hasFlippedCoin && (
               <SoundButton
                 className={styles.actionButton}
@@ -252,7 +246,6 @@ export default function GameBoardPage() {
               </SoundButton>
             )}
 
-            {/* If awake + not taken action + coin is flipped */}
             {isPlayerAwake && !hasTakenAction && hasFlippedCoin && (
               <>
                 <div style={{ display: "flex", gap: "1rem", justifyContent: "center" }}>
@@ -264,7 +257,6 @@ export default function GameBoardPage() {
                   >
                     Gain Wisdom
                   </SoundButton>
-
                   <SoundButton
                     className={styles.actionButton}
                     onClick={() => useWisdom()}
@@ -274,7 +266,6 @@ export default function GameBoardPage() {
                   >
                     Use Wisdom
                   </SoundButton>
-
                   <SoundButton
                     className={styles.actionButton}
                     onClick={() => nextTurn()}
@@ -298,7 +289,6 @@ export default function GameBoardPage() {
               </>
             )}
 
-            {/* If the player is asleep or has already taken an action, show End Turn only */}
             {(hasTakenAction || !isPlayerAwake) && (
               <div style={{ marginTop: "1rem" }}>
                 <SoundButton
