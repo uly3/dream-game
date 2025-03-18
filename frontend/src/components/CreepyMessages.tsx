@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import { useGameStore } from "@/store/gameStore";
 
-// An example array of random phrases. You can expand this with more.
 const CREEPY_PHRASES = [
   "Hello?",
   "Wake up...",
@@ -26,61 +25,44 @@ const CREEPY_PHRASES = [
   "Help...",
 ];
 
-// How many messages to spawn at once, based on sanity breakpoints:
 function getSpawnCountBySanity(sanity: number): number {
-  // e.g. user said:
-  // 100 => 1, 90 => 2, 70 => 3, 60 => 4, <=50 => 5
   if (sanity <= 50) return 5;
   if (sanity <= 60) return 4;
   if (sanity <= 70) return 3;
   if (sanity <= 90) return 2;
-  return 1; // full sanity
+  return 1;
 }
 
 interface Whisper {
-  id: number;       // unique for React
-  text: string;     // the phrase
-  x: number;        // random left
-  y: number;        // random top
+  id: number;
+  text: string;
+  x: number;
+  y: number;
 }
 
 export default function CreepyMessages() {
-  const {
-    players,
-    currentPlayerIndex,
-    gameOver,
-    gameOverCountdown,
-  } = useGameStore();
-
-  // We assume "player" is always at currentPlayerIndex for single Player vs CPU.
-  // If you have multiple players, adapt accordingly.
+  const { players, currentPlayerIndex, gameOver } = useGameStore();
   const player = players[currentPlayerIndex];
   const sanity = player.insanity;
 
-  // Local state for messages currently on screen
   const [activeWhispers, setActiveWhispers] = useState<Whisper[]>([]);
-  const [timerActive, setTimerActive] = useState(true);
 
-  // Helper: spawn N random messages
+  // Spawn count based on sanity
   function spawnWhispers(count: number) {
     const newMessages: Whisper[] = [];
     for (let i = 0; i < count; i++) {
       const randomIndex = Math.floor(Math.random() * CREEPY_PHRASES.length);
       const phrase = CREEPY_PHRASES[randomIndex];
-      // Random screen position (0–100% minus some margin so it doesn't go offscreen)
       const x = Math.random() * 80 + 10; // between 10% and 90%
       const y = Math.random() * 80 + 10; // between 10% and 90%
       newMessages.push({
-        id: Date.now() + i, // not perfect, but fine for demo
+        id: Date.now() + i,
         text: phrase,
         x,
         y,
       });
     }
-    // Add them
     setActiveWhispers((prev) => [...prev, ...newMessages]);
-
-    // Remove each after ~3 seconds
     newMessages.forEach((msg) => {
       setTimeout(() => {
         setActiveWhispers((prev) => prev.filter((m) => m.id !== msg.id));
@@ -88,31 +70,25 @@ export default function CreepyMessages() {
     });
   }
 
-  // A function that sets up the random interval (10–30s) to spawn messages
+  // Schedule a spawn at random intervals (10–30s)
   function scheduleNextSpawn() {
-    if (gameOver) return; // stop scheduling if game ended
+    if (gameOver) return; // stop if game ended
     const nextDelay = Math.random() * 20_000 + 10_000; // 10–30s
     setTimeout(() => {
-      // figure out how many to spawn from sanity
       const count = getSpawnCountBySanity(sanity);
       spawnWhispers(count);
-      // schedule again
       scheduleNextSpawn();
     }, nextDelay);
   }
 
-  // On mount, start the schedule
   useEffect(() => {
-    if (!gameOver && timerActive) {
-      scheduleNextSpawn();
-      setTimerActive(false); // only start once
-    }
-  }, [gameOver, timerActive]);
+    scheduleNextSpawn();
+    // Re-run if sanity changes (game is still ongoing)
+  }, [gameOver, sanity]);
 
-  // If the game ends => spawn a big "burst" of messages
+  // When game ends, spawn an immediate burst of whispers
   useEffect(() => {
     if (gameOver) {
-      // spawn e.g. 10 messages instantly
       spawnWhispers(10);
     }
   }, [gameOver]);
@@ -131,9 +107,8 @@ export default function CreepyMessages() {
             fontSize: "1.2rem",
             fontStyle: "italic",
             textShadow: "1px 1px 2px black",
-            pointerEvents: "none", // so you can click through
+            pointerEvents: "none",
             transition: "opacity 0.3s",
-            // you can add animation/fade if you want
           }}
         >
           {msg.text}

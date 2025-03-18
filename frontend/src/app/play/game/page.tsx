@@ -136,6 +136,8 @@ export default function GameBoardPage() {
           transition: "background-color 1s linear",
         }}
       >
+        {/* Render creepy messages even on game over */}
+        <CreepyMessages />
         <h2>{gameOverMessage}</h2>
         <p>Returning to reality in {gameOverCountdown}s...</p>
       </div>
