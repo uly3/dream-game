@@ -9,9 +9,6 @@ import { useGameStore } from "@/store/gameStore";
 import styles from "./MainMenu.module.css";
 
 export default function MainMenuPage() {
-  // Play Main Menu loop music using the store's musicVolume (converted 0–1)
-  //const musicVolume = useGameStore((state) => state.musicVolume) / 100;
-
   const handleQuit = () => {
     window.close();
   };
@@ -47,6 +44,11 @@ export default function MainMenuPage() {
           Quit
         </SoundButton>
       </div>
+      {/* Footer / copyright text */}
+      <div className={styles.footer}>
+        <p>© Test Studio 2025. All Rights Reserved.</p>
+      </div>
+      
     </div>
   );
 }

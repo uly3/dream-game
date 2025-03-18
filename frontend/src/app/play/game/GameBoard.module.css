@@ -1,14 +1,58 @@
-.container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 1rem;
-    color: var(--dreamWhite);
-  }
-  
-  .gameArea {
-    margin-top: 1rem;
-    border: 2px solid var(--dreamGreen);
-    /* This container holds the Pixi canvas. */
-  }
-  
+.gameContainer {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  color: var(--dreamWhite);
+  background-color: #d0c6c6; /* your pinkish dream color */
+  overflow: hidden; /* in case you have floating elements */
+  padding: 1rem;
+}
+
+.topBanner {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.playerInfo {
+  position: absolute;
+  bottom: 50px;
+  left: 50px;
+}
+
+.cpuInfo {
+  position: absolute;
+  top: 50px;
+  right: 50px;
+}
+
+.middleArea {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+/* Example of styling for your action buttons */
+.actionButton {
+  background-color: var(--dreamGray);
+  color: var(--dreamWhite);
+  border: 1px solid #ccc;
+  border-radius: 0.3rem;
+  padding: 0.5rem 1rem;
+  margin: 0.3rem;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s ease;
+}
+.actionButton:hover {
+  background-color: var(--dreamGreen);
+}
+.actionButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

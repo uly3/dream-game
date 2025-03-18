@@ -1,7 +1,7 @@
 :root {
-  --dreamBlack: #d0c6c6;
+  --dreamBlack: #1c1b1b;  /* darker than #d0c6c6 */
   --dreamWhite: #ffffff;
-  --dreamGreen: #1f3d1f;
+  --dreamGreen: #2f5f2f;
   --dreamGray: #2e2e2e;
   --dreamBrown: #4b3a29;
   --dreamRed: #7d1414;
