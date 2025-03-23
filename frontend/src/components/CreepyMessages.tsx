@@ -43,7 +43,7 @@ interface Whisper {
 export default function CreepyMessages() {
   const { players, currentPlayerIndex, gameOver } = useGameStore();
   const player = players[currentPlayerIndex];
-  const sanity = player.insanity;
+  const sanity = player.sanity;
 
   const [activeWhispers, setActiveWhispers] = useState<Whisper[]>([]);
 

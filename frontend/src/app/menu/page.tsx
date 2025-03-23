@@ -1,11 +1,7 @@
 // src/app/menu/page.tsx
 "use client";
-import { useEffect } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import SoundButton from "@/components/SoundButton";
-import { useBackgroundMusic } from "@/lib/soundManager";
-import { useGameStore } from "@/store/gameStore";
 import styles from "./MainMenu.module.css";
 
 export default function MainMenuPage() {

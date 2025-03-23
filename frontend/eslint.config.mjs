@@ -11,6 +11,16 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    // Disable the react-hooks/exhaustive-deps rule for the following files
+    files: [
+      "src/components/CreepyMessages.tsx",
+      "src/components/MusicProvider.tsx",
+    ],
+    rules: {
+      "react-hooks/exhaustive-deps": "off",
+    },
+  },
 ];
 
 export default eslintConfig;

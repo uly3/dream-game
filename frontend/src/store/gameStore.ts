@@ -1,4 +1,3 @@
-// src/store/gameStore.ts
 import { create } from "zustand";
 
 /** Returns a random 0–9 for new point cards. */
@@ -21,11 +20,11 @@ function pickRandomDreamEntities(count: number): string[] {
 
 export interface Player {
   id: string;
-  roll: number;             // dice roll 1–6
-  insanity: number;         // internal value (displayed as "Sanity" on UI)
-  wisdom: number;           // starts at 0
-  dreamEntities: string[];  // e.g. ["A","B"]
-  numberCards: number[];    // always 3 in hand
+  roll: number;
+  sanity: number; // renamed from insanity
+  wisdom: number;
+  dreamEntities: string[];
+  numberCards: number[];
   isEliminated: boolean;
   usedGuillotineCount?: number;
 }
@@ -52,11 +51,11 @@ interface GameState {
   gameOver: boolean;
   gameOverCountdown: number;
   gameOverMessage: string;
-  fadeToBlack: boolean; // if CPU wins => fade to black; if player wins => fade to white
+  fadeToBlack: boolean;
 
   // SOUND SETTINGS
-  musicVolume: number; // 0–100
-  soundVolume: number; // 0–100
+  musicVolume: number;
+  soundVolume: number;
 
   // ACTIONS
   initGame: () => void;
@@ -64,8 +63,8 @@ interface GameState {
   nextTurn: () => void;
   gainWisdom: () => void;
   initiateDuel: (playerCard: number) => void;
-  useEntityAbility: (entity: string) => void;
-  useWisdom: () => void;
+  entityAbility: (entity: string) => void;
+  wisdomAction: () => void;
   setGameOver: (winner: "player" | "cpu") => void;
   checkElimination: (i1: number, i2: number) => void;
   setMusicVolume: (vol: number) => void;
@@ -73,12 +72,11 @@ interface GameState {
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
-  // INITIAL STATE
   players: [
     {
       id: "player",
       roll: 0,
-      insanity: 100,
+      sanity: 100,
       wisdom: 0,
       dreamEntities: ["A", "B"],
       numberCards: [0, 2, 7],
@@ -88,7 +86,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     {
       id: "cpu",
       roll: 0,
-      insanity: 100,
+      sanity: 100,
       wisdom: 0,
       dreamEntities: ["C", "D"],
       numberCards: [1, 5, 9],
@@ -114,8 +112,6 @@ export const useGameStore = create<GameState>((set, get) => ({
   musicVolume: 50,
   soundVolume: 50,
 
-  // ACTIONS
-
   initGame: () => {
     const { players } = get();
     function rollUntilNoTie(ps: Player[]): Player[] {
@@ -133,7 +129,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     noTiePlayers.forEach((p) => {
       p.numberCards = [getRandomCard(), getRandomCard(), getRandomCard()];
       p.dreamEntities = pickRandomDreamEntities(2);
-      p.insanity = 100;
+      p.sanity = 100;
       p.wisdom = 0;
       p.isEliminated = false;
       p.usedGuillotineCount = 0;
@@ -216,13 +212,12 @@ export const useGameStore = create<GameState>((set, get) => ({
     const player = updated[currentPlayerIndex];
     const oppIndex = (currentPlayerIndex + 1) % updated.length;
     const opponent = updated[oppIndex];
-    // Opponent picks a random card.
     const cpuIndex = Math.floor(Math.random() * opponent.numberCards.length);
     const cpuCard = opponent.numberCards[cpuIndex];
     if (playerCard > cpuCard) {
-      opponent.insanity = Math.max(opponent.insanity - 10, 0);
+      opponent.sanity = Math.max(opponent.sanity - 10, 0);
     } else if (cpuCard > playerCard) {
-      player.insanity = Math.max(player.insanity - 10, 0);
+      player.sanity = Math.max(player.sanity - 10, 0);
     }
     player.numberCards = player.numberCards.filter((c) => c !== playerCard);
     opponent.numberCards.splice(cpuIndex, 1);
@@ -236,7 +231,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     get().checkElimination(currentPlayerIndex, oppIndex);
   },
 
-  useEntityAbility: (entity: string) => {
+  entityAbility: (entity: string) => {
     const { currentPlayerIndex, players, isPlayerAwake, hasTakenAction, gameOver } = get();
     if (gameOver) return;
     if (!isPlayerAwake || hasTakenAction) return;
@@ -245,7 +240,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     const oppIndex = (currentPlayerIndex + 1) % updated.length;
     const opponent = updated[oppIndex];
     switch (entity) {
-      case "A": { // Wisdom Eater
+      case "A": {
         if (opponent.wisdom > 0) {
           opponent.wisdom -= 1;
           player.wisdom += 1;
@@ -254,7 +249,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         get().checkElimination(currentPlayerIndex, oppIndex);
         return;
       }
-      case "B": { // Scout
+      case "B": {
         const oppEntities = [...opponent.dreamEntities];
         set({ scoutEntities: oppEntities, scoutCountdown: 5 });
         const interval = setInterval(() => {
@@ -271,7 +266,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         get().checkElimination(currentPlayerIndex, oppIndex);
         return;
       }
-      case "C": { // Gambler
+      case "C": {
         if (!player.isEliminated && !opponent.isEliminated) {
           set({ gamblerRolling: 3, gamblerResult: null, gamblerShowResult: 0 });
           const rollInterval = setInterval(() => {
@@ -282,7 +277,7 @@ export const useGameStore = create<GameState>((set, get) => ({
               if (dice % 2 === 0) {
                 player.wisdom += 2;
               } else {
-                player.insanity = Math.max(player.insanity - 20, 0);
+                player.sanity = Math.max(player.sanity - 20, 0);
               }
               set({ gamblerResult: dice, gamblerRolling: 0, gamblerShowResult: 3 });
               const showInterval = setInterval(() => {
@@ -307,7 +302,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         }
         return;
       }
-      case "D": { // Gift
+      case "D": {
         player.numberCards.push(getRandomCard());
         while (player.numberCards.length > 3) {
           const discardIndex = Math.floor(Math.random() * player.numberCards.length);
@@ -317,7 +312,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         get().checkElimination(currentPlayerIndex, oppIndex);
         return;
       }
-      case "E": { // Guillotine
+      case "E": {
         if (!player.usedGuillotineCount) player.usedGuillotineCount = 0;
         if (player.usedGuillotineCount >= 2) {
           set({ players: updated, hasTakenAction: true });
@@ -325,15 +320,10 @@ export const useGameStore = create<GameState>((set, get) => ({
         }
         player.usedGuillotineCount++;
         const coin = Math.random() < 0.5;
-        // If CPU is using Guillotine, always target opponent (i.e. do not reduce own sanity)
-        if (player.id === "cpu") {
-          opponent.insanity = Math.max(opponent.insanity - 50, 0);
+        if (coin) {
+          player.sanity = Math.max(player.sanity - 50, 0);
         } else {
-          if (coin) {
-            player.insanity = Math.max(player.insanity - 50, 0);
-          } else {
-            opponent.insanity = Math.max(opponent.insanity - 50, 0);
-          }
+          opponent.sanity = Math.max(opponent.sanity - 50, 0);
         }
         if (player.usedGuillotineCount >= 2) {
           player.dreamEntities = player.dreamEntities.filter((e) => e !== "E");
@@ -347,7 +337,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
 
-  useWisdom: () => {
+  wisdomAction: () => {
     const { currentPlayerIndex, players, isPlayerAwake, hasTakenAction, gameOver } = get();
     if (gameOver) return;
     if (!isPlayerAwake || hasTakenAction) return;
@@ -368,10 +358,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   setGameOver: (winner: "player" | "cpu") => {
     const { gameOver } = get();
     if (gameOver) return;
-    let message =
-      winner === "player"
-        ? "You awake from your sleep paralysis!"
-        : "You succumbed to sleep paralysis...";
+    const message = winner === "player"
+      ? "You awake from your sleep paralysis!"
+      : "You succumbed to sleep paralysis...";
     const fadeToBlack = winner === "cpu";
     set({
       gameOver: true,
@@ -396,19 +385,19 @@ export const useGameStore = create<GameState>((set, get) => ({
     const p1 = updatedPlayers[i1];
     const p2 = updatedPlayers[i2];
     if (p1.dreamEntities.length === 0) {
-      p1.insanity = 0;
+      p1.sanity = 0;
       p1.isEliminated = true;
     }
     if (p2.dreamEntities.length === 0) {
-      p2.insanity = 0;
+      p2.sanity = 0;
       p2.isEliminated = true;
     }
-    if (p1.insanity <= 0) {
-      p1.insanity = 0;
+    if (p1.sanity <= 0) {
+      p1.sanity = 0;
       p1.isEliminated = true;
     }
-    if (p2.insanity <= 0) {
-      p2.insanity = 0;
+    if (p2.sanity <= 0) {
+      p2.sanity = 0;
       p2.isEliminated = true;
     }
     if (p1.isEliminated && !p2.isEliminated) {
